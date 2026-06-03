@@ -28,22 +28,25 @@
 // (struct primOpV ([op : Symbol]) #:transparent)
 // (struct stringV ([s : String]))
 
-struct Binding {name: string, val: Value}
+type ExprC = NumC | StrC | IdC | IfC | LamC | AppC
+type Value = boolV | numV | closV | primOpV | stringV
 type Env = []Binding
 
-struct NumC {n: f64}
-struct StrC {s: string}
-struct IdC {name: string}
-struct IfC {test: ExprC, then: ExprC, else: ExprC}
-struct LamC {params: []string, body: ExprC}
-struct AppC {fun: ExprC, args: []ExprC}
-type ExprC = NumC | StrC | IdC | IfC | LamC | AppC
+struct Binding {
+    name string
+    val  Value
+}
+struct NumC  { n f64 }
+struct StrC  { s string }
+struct IdC   { name string }
+struct IfC   { test ExprC; then ExprC; else_br ExprC }
+struct LamC  { params []string; body ExprC }
+struct AppC  { func ExprC; args []ExprC }
 
-struct boolV {b: bool}
-struct numV {n: f64}
-struct closV {args: []string, body: ExprC, env: Env}
-struct primOpV {op: string}
-struct stringV {s: string}
-type Value = boolV | numV | closV | primOpV | stringV
+struct boolV   { b bool }
+struct numV    { n f64 }
+struct closV   { args []string; body ExprC; env Env }
+struct primOpV { op string }
+struct stringV { s string }
 
 
