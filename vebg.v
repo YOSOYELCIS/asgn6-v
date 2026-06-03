@@ -19,7 +19,7 @@ enum ExprKind {
 struct ExprC {
 mut:
 	kind    ExprKind
-	// numC
+	// numCgit s
 	num     f64
 	// idC / lamC body symbol
 	sym     string
