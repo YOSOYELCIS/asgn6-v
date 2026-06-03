@@ -12,6 +12,7 @@
 (struct numC ([n : Real]) #:transparent)
 (struct lamC ([args : (Listof idC)] [body : ExprC]) #:transparent)
 
+
 ; environment related data
 (define-type Env (Listof Binding))
 (define mt-env '())
