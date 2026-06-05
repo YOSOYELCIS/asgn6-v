@@ -49,4 +49,33 @@ struct closV   { args []string; body ExprC; env Env }
 struct primOpV { op string }
 struct stringV { s string }
 
+ fn interp(expr ExprC, env []Binding) Value {
+  	match expr {
+  		NumC {
+  			return num_v(expr.n)
+  		}
+  		StrC {
+  			return string_v(expr.s)
+  		}
+  		IdC {
+  			return lookup(expr.name, env)
+  		}
+  		LamC {
+  			return clos_v(expr.params, expr.body, env)
+  		}
+  		IfC {
+  			cond_val := interp(expr.test, env)
+  			if cond_val is boolV {
+  				if cond_val.b {
+  					return interp(expr.then, env)
+  				}
+  				return interp(expr.else_br, env)
+  			}
+  			panic('interp: condition not a boolean expression (VEBG)')
+  		}
+  		AppC {
+  			// handle application here
+  		}
+  	}
+  }
 
