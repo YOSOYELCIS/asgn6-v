@@ -28,26 +28,28 @@
 // (struct primOpV ([op : Symbol]) #:transparent)
 // (struct stringV ([s : String]))
 
-type ExprC = NumC | StrC | IdC | IfC | LamC | AppC
-type Value = boolV | numV | closV | primOpV | stringV
-type Env = []Binding
+pub type ExprC = NumC | StrC | IdC | IfC | LamC | AppC
+pub type Value = BoolV | NumV | ClosV | PrimOpV | StringV | VoidV
+pub type Env = []Binding
 
-struct Binding {
+pub struct Binding {
     name string
-    val  Value
+    val  &Value
 }
-struct NumC  { n f64 }
-struct StrC  { s string }
-struct IdC   { name string }
-struct IfC   { test ExprC; then ExprC; else_br ExprC }
-struct LamC  { params []string; body ExprC }
-struct AppC  { func ExprC; args []ExprC }
 
-struct boolV   { b bool }
-struct numV    { n f64 }
-struct closV   { args []string; body ExprC; env Env }
-struct primOpV { op string }
-struct stringV { s string }
+pub struct NumC  { n f64 }
+pub struct StrC  { s string }
+pub struct IdC   { name string }
+pub struct IfC   { test ExprC then ExprC else_br ExprC }
+pub struct LamC  { params []string body ExprC }
+pub struct AppC  { func ExprC args []ExprC }
+
+pub struct BoolV   { b bool }
+pub struct NumV    { n f64 }
+pub struct ClosV   { args []string body ExprC env Env }
+pub struct PrimOpV { op string }
+pub struct StringV { s string }
+pub struct VoidV   {}
 
  fn interp(expr ExprC, env []Binding) Value {
   	match expr {
@@ -65,7 +67,7 @@ struct stringV { s string }
   		}
   		IfC {
   			cond_val := interp(expr.test, env)
-  			if cond_val is boolV {
+  			if cond_val is BoolV {
   				if cond_val.b {
   					return interp(expr.then, env)
   				}
