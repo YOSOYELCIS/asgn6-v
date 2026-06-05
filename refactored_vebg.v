@@ -1,33 +1,3 @@
-// struct Dog {}
-// struct Cat {}
-// struct Veasel {}
-// type Animal = Dog | Cat | Veasel
-// a := Animal(Veasel{})
-// match a {
-//     Dog { println('Bay') }
-//     Cat { println('Meow') }
-//     Veasel { println('Vrrrrr-eeee') } // see: https://www.youtube.com/watch?v=qTJEDyj2N0Q
-// }
-
-
-
-
-// (struct NumC ([n : Real]) #:transparent)
-// (struct StrC ([s : String]) #:transparent)
-// (struct IdC ([name : Symbol]) #:transparent)
-// (struct IfC ([test : ExprC] [then : ExprC] [else : ExprC]) #:transparent)
-// (struct LamC ([params : (Listof Symbol)] [body : ExprC]) #:transparent)
-// (struct AppC ([fun : ExprC] [args : (Listof ExprC)]) #:transparent)
-
-// (define-type ExprC (U NumC StrC IdC IfC LamC AppC))
-
-// (define-type Value (U boolV numV closV primOpV stringV))
-// (struct boolV ([b : Boolean]) #:transparent)
-// (struct numV ([n : Real]) #:transparent)
-// (struct closV ([args : (Listof idC)] [body : ExprC] [env : Env]) #:transparent)
-// (struct primOpV ([op : Symbol]) #:transparent)
-// (struct stringV ([s : String]))
-
 pub type ExprC = NumC | StrC | IdC | IfC | LamC | AppC
 pub type Value = BoolV | NumV | ClosV | PrimOpV | StringV | VoidV
 pub type Env = []Binding
@@ -191,32 +161,55 @@ fn serialize(v &Value) string {
 }
 
 
- fn interp(expr ExprC, env []Binding) Value {
+ fn interp(expr ExprC, envi []Binding) Value {
   	match expr {
   		NumC {
-  			return num_v(expr.n)
+  			return &NumV{n : expr.n}
   		}
   		StrC {
-  			return string_v(expr.s)
+  			return &StringV{s: expr.s}
   		}
   		IdC {
-  			return lookup(expr.name, env)
+  			return lookup(expr.name, envi)
   		}
   		LamC {
-  			return clos_v(expr.params, expr.body, env)
+  			return &ClosV(args: expr.params, body: expr.body, env: envi)
   		}
   		IfC {
-  			cond_val := interp(expr.test, env)
+  			cond_val := interp(expr.test, envi)
   			if cond_val is BoolV {
   				if cond_val.b {
-  					return interp(expr.then, env)
+  					return interp(expr.then, envi)
   				}
-  				return interp(expr.else_br, env)
+  				return interp(expr.else_br, envi)
   			}
   			panic('interp: condition not a boolean expression (VEBG)')
   		}
   		AppC {
-  			// handle application here
+  			fd := interp(expr.fun, envi)
+			mut evaluated_args := []&Value{}
+			for a in expr.args {
+				evaluated_args << interp(a, envi)
+			}
+			match fd.kind {
+				.prim_op_v {
+					return op_to_meaning(fd.op, evaluated_args)
+				}
+				.clos_v {
+					if fd.params.len != evaluated_args.len {
+						panic('interp: wrong number of arguments applied to function (VEBG)')
+					}
+					mut new_binds := []Binding{}
+					for i, p in fd.params {
+						new_binds << Binding{ name: p, val: evaluated_args[i] }
+					}
+					new_env := extend_env(new_binds, fd.env)
+					return interp(fd.body, new_env)
+				}
+				else {
+					panic('interp: poorly formatted function call (VEBG)')
+				}
+			}
   		}
   	}
   }
