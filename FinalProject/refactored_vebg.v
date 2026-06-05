@@ -404,59 +404,59 @@ fn test_lambda_add() {
     assert (result as NumV).n == 7
 }
 
-// fn test_closure_captures_env() {
-//     // ((fn (x) (fn (y) (+ x y))) 10) applied to 5  =>  15
-//     outer := interp_top(AppC{
-//         func: LamC{
-//             params: ['x']
-//             body: LamC{
-//                 params: ['y']
-//                 body: AppC{
-//                     func: IdC{ name: '+' }
-//                     args: [ExprC(IdC{name: 'x'}), ExprC(IdC{name: 'y'})]
-//                 }
-//             }
-//         }
-//         args: [ExprC(NumC{n: 10})]
-//     })
+fn test_closure_captures_env() {
+    // ((fn (x) (fn (y) (+ x y))) 10) applied to 5  =>  15
+    outer := interp_top(AppC{
+        func: LamC{
+            params: ['x']
+            body: LamC{
+                params: ['y']
+                body: AppC{
+                    func: IdC{ name: '+' }
+                    args: [ExprC(IdC{name: 'x'}), ExprC(IdC{name: 'y'})]
+                }
+            }
+        }
+        args: [ExprC(NumC{n: 10})]
+    })
 
-//     println("SUCCESS ON OUTER")
-//     // outer is now a ClosV; apply it to 5
-//     // result := interp_top(AppC{
-//     //     func: LamC{  // wrap in another lambda so we can pass the closure as a value
-//     //         params: ['f']
-//     //         body: AppC{
-//     //             func: IdC{ name: 'f' }
-//     //             args: [ExprC(NumC{n: 5})]
-//     //         }
-//     //     }
-//     //     args: [outer a]  // placeholder — see note below
-//     // })
-//     // // The cleanest way to test this end-to-end is one expression:
-//     // // (((fn (x) (fn (y) (+ x y))) 10) 5)
+    println("SUCCESS ON OUTER")
+    outer is now a ClosV; apply it to 5
+    result := interp_top(AppC{
+        func: LamC{  // wrap in another lambda so we can pass the closure as a value
+            params: ['f']
+            body: AppC{
+                func: IdC{ name: 'f' }
+                args: [ExprC(NumC{n: 5})]
+            }
+        }
+        args: [outer a]  // placeholder — see note below
+    })
+    // The cleanest way to test this end-to-end is one expression:
+    // (((fn (x) (fn (y) (+ x y))) 10) 5)
 
-//     // println("SUCCESS ON RESULT 1")
+    println("SUCCESS ON RESULT 1")
 
-//     // result2 := interp_top(AppC{
-//     //     func: AppC{
-//     //         func: LamC{
-//     //             params: ['x']
-//     //             body: LamC{
-//     //                 params: ['y']
-//     //                 body: AppC{
-//     //                     func: IdC{ name: '+' }
-//     //                     args: [ExprC(IdC{name: 'x'}), ExprC(IdC{name: 'y'})]
-//     //                 }
-//     //             }
-//     //         }
-//     //         args: [ExprC(NumC{n: 10})]
-//     //     }
-//     //     args: [ExprC(NumC{n: 5})]
-//     // })
+    result2 := interp_top(AppC{
+        func: AppC{
+            func: LamC{
+                params: ['x']
+                body: LamC{
+                    params: ['y']
+                    body: AppC{
+                        func: IdC{ name: '+' }
+                        args: [ExprC(IdC{name: 'x'}), ExprC(IdC{name: 'y'})]
+                    }
+                }
+            }
+            args: [ExprC(NumC{n: 10})]
+        }
+        args: [ExprC(NumC{n: 5})]
+    })
 
-//     // println("SUCCESS ON RESULT 2")
-//     // assert (result2 as NumV).n == 15
-// }
+    println("SUCCESS ON RESULT 2")
+    assert (result2 as NumV).n == 15
+}
 
 // ── serialize ─────────────────────────────────────────────────────────────────
 
