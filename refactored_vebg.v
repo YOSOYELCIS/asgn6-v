@@ -51,6 +51,146 @@ pub struct PrimOpV { op string }
 pub struct StringV { s string }
 pub struct VoidV   {}
 
+
+fn extend_env(binds []Binding, env []Binding) []Binding {
+	mut new_env := binds.clone()
+	new_env << env
+	return new_env
+}
+
+fn lookup(name string, env []Binding) &Value {
+	for b in env {
+		if b.name == name {
+			return b.val
+		}
+	}
+	panic('lookup: name not found: ${name} (VEBG)')
+}
+
+const dni_table = ['->','fn','if','given','=']
+
+fn is_banned(s string) bool {
+	return s in dni_table
+}
+
+
+pub fn op_to_meaning(op string, args []&Value) &Value {
+    match op {
+        '+' {
+            if args.len == 2 && args[0] is NumV && args[1] is NumV {
+                return &NumV{n: (args[0] as NumV).n + (args[1] as NumV).n}
+            } else {
+                panic('opToMeaning: invalid args for + (VEBG)')
+            }
+        }
+        '-' {
+            if args.len == 2 && args[0] is NumV && args[1] is NumV {
+                return &NumV{n: (args[0] as NumV).n - (args[1] as NumV).n}
+            } else {
+                panic('opToMeaning: invalid args for - (VEBG)')
+            }
+        }
+        '*' {
+            if args.len == 2 && args[0] is NumV && args[1] is NumV {
+                return &NumV{n: (args[0] as NumV).n * (args[1] as NumV).n}
+            } else {
+                panic('opToMeaning: invalid args for * (VEBG)')
+            }
+        }
+        '/' {
+            if args.len == 2 && args[0] is NumV && args[1] is NumV {
+                b := (args[1] as NumV).n
+                if b == 0 {
+                    panic('opToMeaning: division by zero (VEBG)')
+                }
+                return &NumV{n: (args[0] as NumV).n / b}
+            } else {
+                panic('opToMeaning: invalid args for / (VEBG)')
+            }
+        }
+        '<=' {
+            if args.len == 2 && args[0] is NumV && args[1] is NumV {
+                return &BoolV{b: (args[0] as NumV).n <= (args[1] as NumV).n}
+            } else {
+                panic('opToMeaning: invalid args for <= (VEBG)')
+            }
+        }
+        'equal?' {
+            if args.len != 2 { panic('opToMeaning: invalid args for equal? (VEBG)') }
+            if args[0] is NumV && args[1] is NumV {
+                return &BoolV{b: (args[0] as NumV).n == (args[1] as NumV).n}
+            } else if args[0] is StringV && args[1] is StringV {
+                return &BoolV{b: (args[0] as StringV).s == (args[1] as StringV).s}
+            } else if args[0] is BoolV && args[1] is BoolV {
+                return &BoolV{b: (args[0] as BoolV).b == (args[1] as BoolV).b}
+            } else {
+                return &BoolV{b: false}
+            }
+        }
+        'substring' {
+            if args.len == 3 && args[0] is StringV && args[1] is NumV && args[2] is NumV {
+                s     := (args[0] as StringV).s
+                start := int((args[1] as NumV).n)
+                stop  := int((args[2] as NumV).n)
+                if start < 0 || stop < 0 || start >= s.len || stop > s.len || start > stop {
+                    panic('opToMeaning: substring index out of range (VEBG)')
+                }
+                return &StringV{s: s[start..stop]}
+            } else {
+                panic('opToMeaning: invalid args for substring (VEBG)')
+            }
+        }
+        'strlen' {
+            if args.len == 1 && args[0] is StringV {
+                return &NumV{n: f64((args[0] as StringV).s.len)}
+            } else {
+                panic('opToMeaning: invalid args for strlen (VEBG)')
+            }
+        }
+        'error' {
+            if args.len == 1 {
+                msg := if args[0] is StringV { (args[0] as StringV).s } else { serialize(args[0]) }
+                panic('user-error: ${msg}')
+            }
+            panic('opToMeaning: invalid args for error (VEBG)')
+        }
+        'crying' {
+            if args.len == 1 && args[0] is BoolV {
+                if (args[0] as BoolV).b {
+                    println('🥹')
+                } else {
+                    println('🥺')
+                }
+                return &VoidV{}
+            } else {
+                panic('opToMeaning: invalid args for crying (VEBG)')
+            }
+        }
+        else {
+            panic('opToMeaning: invalid operation: ${op} (VEBG)')
+        }
+    }
+}
+
+
+fn serialize(v &Value) string {
+	match v {
+		NumV    {
+			n := v.n
+			if n == math.floor(n) && !math.is_inf(n, 0) {
+				return i64(n).str()
+			}
+			return n.str()
+		}
+		BoolV   { return if v.b { 'true' } else { 'false' } }
+		ClosV   { return '#<procedure>' }
+		PrimOpV{ return '#<primop>' }
+		StringV { return '"${v.s}"' }
+		VoidV   { return '' }
+	}
+}
+
+
  fn interp(expr ExprC, env []Binding) Value {
   	match expr {
   		NumC {
